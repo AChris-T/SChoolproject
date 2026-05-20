@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  waste-analytics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./waste_app:/app
+    environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_LOGGER_LEVEL=info
+    networks:
+      - waste-analytics-net
+
+networks:
+  waste-analytics-net:
+    driver: bridge
