@@ -673,9 +673,10 @@ def page_audit(audit_df):
                     name=name, x=hall_sum["hall"], y=hall_sum[key],
                     marker_color=color, marker_line_width=0,
                 ))
-            fig.update_layout(**PLOTLY_LAYOUT, barmode="group", height=360,
-                              yaxis_title="kg", title="")
-            fig.update_traces(marker_cornerradius=4)
+            layout = PLOTLY_LAYOUT.copy()
+            layout.update({"barmode": "group", "height": 360, "yaxis_title": "kg", "title": ""})
+            fig.update_layout(**layout)
+            fig.update_traces(marker_line_width=0)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -694,7 +695,9 @@ def page_audit(audit_df):
                     textinfo="percent",
                     showlegend=(i == 1),
                 ), row=1, col=i)
-            fig2.update_layout(**PLOTLY_LAYOUT, height=320, showlegend=True)
+            layout2 = PLOTLY_LAYOUT.copy()
+            layout2.update({"height": 320, "showlegend": True})
+            fig2.update_layout(**layout2)
             st.plotly_chart(fig2, use_container_width=True)
 
         # Detailed table
@@ -736,9 +739,14 @@ def page_audit(audit_df):
                     mode="lines", name=cat,
                     line=dict(color=color, width=1.5, dash="dot"),
                 ))
-        fig3.update_layout(**PLOTLY_LAYOUT, height=380,
-                           xaxis_title="Day", yaxis_title="kg",
-                           xaxis=dict(tickmode="linear", dtick=1, **PLOTLY_LAYOUT["xaxis"]))
+            layout3 = PLOTLY_LAYOUT.copy()
+            layout3.update({
+                "height": 380,
+                "xaxis_title": "Day",
+                "yaxis_title": "kg",
+                "xaxis": {**layout3.get("xaxis", {}), "tickmode": "linear", "dtick": 1},
+            })
+            fig3.update_layout(**layout3)
         st.plotly_chart(fig3, use_container_width=True)
 
         peak_day = daily.loc[daily["total_kg"].idxmax(), "day_number"]
@@ -815,8 +823,10 @@ def page_survey(survey_df):
                 counts.columns = ["Rating","Count"]
                 fig = px.bar(counts, x="Rating", y="Count",
                              color_discrete_sequence=[COLORS["rec"]])
-                fig.update_traces(marker_cornerradius=6)
-                fig.update_layout(**PLOTLY_LAYOUT, height=280)
+                fig.update_traces(marker_line_width=0)
+                tmp = PLOTLY_LAYOUT.copy()
+                tmp.update({"height": 280})
+                fig.update_layout(**tmp)
                 st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -842,8 +852,10 @@ def page_survey(survey_df):
                 counts3.columns = ["Behaviour","Count"]
                 fig3 = px.bar(counts3, x="Behaviour", y="Count",
                               color_discrete_sequence=[COLORS["haz"]])
-                fig3.update_traces(marker_cornerradius=6)
-                fig3.update_layout(**PLOTLY_LAYOUT, height=260)
+                fig3.update_traces(marker_line_width=0)
+                tmp3 = PLOTLY_LAYOUT.copy()
+                tmp3.update({"height": 260})
+                fig3.update_layout(**tmp3)
                 st.plotly_chart(fig3, use_container_width=True)
 
         with col4:
@@ -1088,8 +1100,13 @@ def page_predictor(survey_df, audit_df):
 
         fig_f = px.bar(day_df, x="Day", y="Forecast (kg)",
                        color_discrete_sequence=[COLORS["bio"]])
-        fig_f.update_traces(marker_cornerradius=5)
-        fig_f.update_layout(**PLOTLY_LAYOUT, height=300, xaxis=dict(tickmode="linear",dtick=1,**PLOTLY_LAYOUT["xaxis"]))
+        fig_f.update_traces(marker_line_width=0)
+        ltmpf = PLOTLY_LAYOUT.copy()
+        ltmpf.update({
+            "height": 300,
+            "xaxis": {**ltmpf.get("xaxis", {}), "tickmode": "linear", "dtick": 1},
+        })
+        fig_f.update_layout(**ltmpf)
         st.plotly_chart(fig_f, use_container_width=True)
 
         insight(f"At current per-capita rate with visitor multiplier {visitor_adj:.1f}×, "
