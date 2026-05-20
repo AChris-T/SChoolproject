@@ -1057,6 +1057,47 @@ def page_predictor(survey_df, audit_df):
                                 xaxis_title="Contribution to Ŷ", title="Factor Contributions")
             rc2.plotly_chart(fig_c, use_container_width=True)
 
+            # Recommended preventive measures based on prediction and top contributors
+            styled_header("Recommended Preventive Measures")
+            # get top contributors by absolute contribution
+            top = contrib_df.copy()
+            top["abs"] = top["Contribution"].abs()
+            top = top.sort_values("abs", ascending=False).head(3)
+
+            recs = []
+            if label == "Large":
+                recs.append("High predicted waste scale — schedule additional waste pickups and conduct an immediate audit of collection points.")
+            elif label == "Medium":
+                recs.append("Moderate predicted waste — monitor for spikes and consider occasional extra collections.")
+            else:
+                recs.append("Low predicted waste — maintain current collection schedule and promote waste reduction campaigns.")
+
+            for _, row in top.iterrows():
+                factor = row["Factor"]
+                if factor == "Meals/day":
+                    recs.append("Encourage portion planning and communal meal coordination to reduce food waste.")
+                elif factor == "Packaged food":
+                    recs.append("Promote reusable containers, reduce single-use packaging on campus, and offer recycling bins near canteens.")
+                elif factor == "Disposal frequency":
+                    recs.append("Increase disposal points and provide clear schedules so residents can dispose waste more frequently.")
+                elif factor == "Recycling awareness":
+                    recs.append("Run recycling awareness campaigns and install labelled recycling bins across halls.")
+                elif factor == "Visitor effect":
+                    recs.append("Plan for visitor surges: temporary bins, additional pickups on weekends, and visitor guidance signage.")
+                elif factor == "Separation behaviour":
+                    recs.append("Introduce separation stations, training sessions, and incentives for segregation at source.")
+
+            # deduplicate while preserving order
+            seen = set()
+            dedup = []
+            for r in recs:
+                if r not in seen:
+                    dedup.append(r)
+                    seen.add(r)
+
+            for r in dedup:
+                st.markdown(f"- {r}")
+
         else:
             st.info("Load survey data (or enable sample data) to activate the regression predictor.")
 
@@ -1113,6 +1154,38 @@ def page_predictor(survey_df, audit_df):
                 f"{hall_choice} hall is expected to generate approximately {forecast_total:.1f} kg over {days} days.")
         if visitor_adj > 1.1:
             insight("High visitor activity expected — consider scheduling an extra collection pickup.", "warn")
+
+        # Hall-level recommended preventive measures
+        styled_header("Hall-Level Preventive Measures")
+        per_cap_fore = pc_rate * visitor_boost
+        hall_recs = []
+
+        if per_cap_fore > 0.8:
+            hall_recs.append("Expected per-capita generation is high — schedule additional collection pickups and consider short-term extra bins.")
+        elif per_cap_fore >= 0.3:
+            hall_recs.append("Per-capita generation is within typical range — monitor weekly and keep current collection frequency.")
+        else:
+            hall_recs.append("Per-capita generation is low — verify population estimates and encourage on-site disposal to improve measurement accuracy.")
+
+        if visitor_adj > 1.1:
+            hall_recs.append("Prepare for visitor surges: deploy temporary bins near entry points and increase weekend pickups.")
+
+        if new_pop > row["pop"] * 1.2:
+            hall_recs.append("Planned population increase — reassess collection frequency and bin capacity.")
+
+        if pc_rate > 0.6:
+            hall_recs.append("High baseline per-capita rate — run targeted waste reduction campaigns and food-waste minimisation programs.")
+
+        # General operational suggestions
+        hall_recs.append("Install labelled separation stations and provide clear signage to improve segregation at source.")
+        hall_recs.append("Place recycling and organics bins near dining areas and student common rooms.")
+
+        # deduplicate and display
+        seen_h = set()
+        for r in hall_recs:
+            if r not in seen_h:
+                st.markdown(f"- {r}")
+                seen_h.add(r)
 
 
 # ─────────────────────────────────────────────────────────────────
