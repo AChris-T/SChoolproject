@@ -224,6 +224,53 @@ st.markdown("""
         font-size: 0.8rem;
     }
 
+    /* Responsive adjustments for mobile / small screens */
+    @media (max-width: 900px) {
+        .metric-card {
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        .metric-value { font-size: 1.6rem; }
+        .metric-label { font-size: 0.65rem; }
+        .metric-sub { font-size: 0.78rem; }
+        .section-header {
+            font-size: 0.62rem;
+            padding-left: 8px;
+            border-left-width: 3px;
+        }
+        .insight-card { font-size: 0.85rem; padding: 10px 12px; margin-bottom: 12px; }
+        div[data-testid="stHorizontalBlock"] {
+            flex-direction: column;
+            gap: 14px;
+        }
+        div[data-testid="stHorizontalBlock"] > div {
+            width: 100% !important;
+            margin-bottom: 8px;
+        }
+        div[data-testid="column"] {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        .stTabs [data-baseweb="tab-list"] { padding: 6px; gap: 6px; }
+        .stTabs [data-baseweb="tab"] { padding: 8px 12px; font-size: 0.85rem; }
+        .stButton > button { padding: 8px 12px; font-size: 0.95rem; }
+        .stTextInput input, .stNumberInput input, .stSelectbox select, .stTextArea textarea { font-size: 0.95rem; }
+        .dataframe { font-size: 0.75rem; }
+        section[data-testid="stSidebar"] { padding: 8px; }
+        html, body, [class*="css"] { font-size: 14px; }
+    }
+
+    @media (max-width: 420px) {
+        .metric-card { padding: 8px 10px; margin-bottom: 10px; }
+        .metric-value { font-size: 1.2rem; }
+        .section-header { font-size: 0.58rem; }
+        .stTabs [data-baseweb="tab"] { padding: 6px 8px; font-size: 0.82rem; }
+        .insight-card { font-size: 0.8rem; margin-bottom: 10px; }
+        .stButton > button { padding: 6px 10px; }
+        div[data-testid="stHorizontalBlock"] { gap: 16px; }
+    }
+
     /* Hide streamlit branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
