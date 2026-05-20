@@ -1399,17 +1399,93 @@ def page_data_entry():
 # DATA LOADING
 # ─────────────────────────────────────────────────────────────────
 
+def validate_audit_structure(df: pd.DataFrame) -> tuple[bool, str]:
+    """Check if dataframe has required audit columns and return (valid, message)."""
+    if df is None or len(df) == 0:
+        return False, "File is empty. Please upload a file with at least 1 row of data."
+    
+    missing = [col for col in AUDIT_COLUMNS if col not in df.columns]
+    if missing:
+        found_cols = ", ".join(df.columns.tolist()[:5])
+        if len(df.columns) > 5:
+            found_cols += f", ... (+{len(df.columns) - 5} more)"
+        return False, f"""
+**Audit file is missing required columns:**
+- Missing: {', '.join(missing)}
+- Found: {found_cols}
+
+**Expected columns:** {', '.join(AUDIT_COLUMNS)}
+"""
+    return True, ""
+
+def validate_survey_structure(df: pd.DataFrame) -> tuple[bool, str]:
+    """Check if dataframe has required survey columns and return (valid, message)."""
+    if df is None or len(df) == 0:
+        return False, "File is empty. Please upload a file with at least 1 row of data."
+    
+    missing = [col for col in SURVEY_COLUMNS if col not in df.columns]
+    if missing:
+        found_cols = ", ".join(df.columns.tolist()[:5])
+        if len(df.columns) > 5:
+            found_cols += f", ... (+{len(df.columns) - 5} more)"
+        return False, f"""
+**Survey file is missing required columns:**
+- Missing: {', '.join(missing)}
+- Found: {found_cols}
+
+**Expected columns:** {', '.join(SURVEY_COLUMNS)}
+"""
+    return True, ""
+
 def load_df(file) -> pd.DataFrame | None:
     if file is None:
         return None
     try:
+        # Validate file type
+        if not (file.name.endswith(".csv") or file.name.endswith(".xlsx")):
+            st.sidebar.error(f"❌ **Invalid file type:** {file.name}\n\n**Supported formats:** CSV (.csv) or Excel (.xlsx)")
+            return None
+        
+        # Try to load the file
         if file.name.endswith(".csv"):
             return pd.read_csv(file)
         else:
             return pd.read_excel(file)
-    except Exception as e:
-        st.sidebar.error(f"Failed to load {file.name}: {e}")
+    except pd.errors.EmptyDataError:
+        st.sidebar.error(f"❌ **Empty file:** {file.name}\n\nThe file has no data. Please upload a non-empty CSV or Excel file.")
         return None
+    except pd.errors.ParserError as e:
+        st.sidebar.error(f"❌ **Corrupted CSV file:** {file.name}\n\n**Error:** Parsing failed. The CSV may be malformed (missing headers, irregular columns, special characters).\n\n**Tip:** Try opening it in Excel and re-saving.")
+        return None
+    except Exception as e:
+        error_type = type(e).__name__
+        if "permission" in str(e).lower():
+            st.sidebar.error(f"❌ **Permission denied:** {file.name}\n\nThe file is open in another program. Close it and try again.")
+        elif "encoding" in str(e).lower():
+            st.sidebar.error(f"❌ **Encoding error:** {file.name}\n\nThe file may use an unsupported character encoding. Try saving as UTF-8.")
+        else:
+            st.sidebar.error(f"❌ **Failed to load {file.name}**\n\n**Error type:** {error_type}\n**Details:** {str(e)}\n\n**Tips:**\n- Ensure file is valid CSV/Excel\n- Check that file isn't corrupted\n- Try opening in Excel first to verify\n- Ensure headers match expected format")
+        return None
+
+def validate_and_load_audit(file) -> pd.DataFrame | None:
+    """Load audit file with validation."""
+    df = load_df(file)
+    if df is not None:
+        valid, msg = validate_audit_structure(df)
+        if not valid:
+            st.sidebar.error(f"❌ **Audit file structure mismatch:**\n\n{msg}")
+            return None
+    return df
+
+def validate_and_load_survey(file) -> pd.DataFrame | None:
+    """Load survey file with validation."""
+    df = load_df(file)
+    if df is not None:
+        valid, msg = validate_survey_structure(df)
+        if not valid:
+            st.sidebar.error(f"❌ **Survey file structure mismatch:**\n\n{msg}")
+            return None
+    return df
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -1421,12 +1497,12 @@ def main():
 
     # Resolve data sources
     if audit_file:
-        audit_df = load_df(audit_file)
+        audit_df = validate_and_load_audit(audit_file)
     else:
         audit_df = None
 
     if survey_file:
-        survey_df = load_df(survey_file)
+        survey_df = validate_and_load_survey(survey_file)
     else:
         survey_df = None
 
